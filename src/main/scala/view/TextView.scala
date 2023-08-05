@@ -1,24 +1,51 @@
 package view
 import presentation.data._
 
-case class TextView(text: String)
+case class TextView(source: Presentation) {
+  // TODO: add caching
 
-object TextView {
-  def from(
-      content: Content
-  )(
-      headerSeparator: HeaderSeparator,
-      lineSeparator: LineSeparator
-  ): TextView = {
-    var str: StringBuilder = new StringBuilder()
+  def format(f: Format): TextView = TextView(f.process(source))
 
-    content.data.foreach { category =>
-      str ++= s"${category.header}${headerSeparator.value}\n"
-      category.lines.map { line =>
-        str ++= s"${line.first}${lineSeparator.value}${line.second}\n"
+  def asString: String = {
+    import source._
+    import separators._
+    val str = new StringBuilder()
+
+    categories foreach { category =>
+      str append s"${category.header}${headerSep.value}\n"
+      category.lines map {
+        case NewLine => // for now ignoring
+        case WordLine(first, second) =>
+          str append s"${first}${lineSep.value}${second}\n"
       }
+      str append "\n"
     }
+    str.toString
+  }
+}
 
-    TextView(str.toString)
+sealed trait Format {
+  def process(content: Presentation): Presentation
+}
+
+object Format {
+  // aliases
+  val LearningPart = OnlyFirstPart
+  val TranslatedPart = OnlySecondPart
+}
+
+object DefaultFormat extends Format {
+  def process(content: Presentation): Presentation = content
+}
+
+object OnlyFirstPart extends Format {
+  def process(content: Presentation): Presentation = {
+    content.transformContent(w => WordLine(w.first, " "))
+  }
+}
+
+object OnlySecondPart extends Format {
+  def process(content: Presentation): Presentation = {
+    content.transformContent(w => WordLine(" ", w.second))
   }
 }

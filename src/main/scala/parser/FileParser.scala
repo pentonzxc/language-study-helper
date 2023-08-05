@@ -4,6 +4,7 @@ import presentation.data._
 
 import java.io.File
 import scala.util.matching.Regex
+import util.FileUtil
 
 abstract class FileParser extends Parser {
 
@@ -16,11 +17,9 @@ abstract class FileParser extends Parser {
   }
 }
 
-// some default realization
+// some default impl
 
 class FileWithCategoriesParser extends FileParser {
-
-  // TODO: think about defining separate isHeader and isLine logic
 
   private def regexForLine(separator: LineSeparator): Regex = {
     s"(.*)${separator.value}(.*)".r
@@ -35,7 +34,7 @@ class FileWithCategoriesParser extends FileParser {
   )(
       headerSeparator: HeaderSeparator,
       lineSeparator: LineSeparator
-  ): Content = {
+  ): Presentation = {
     val builder = ContentBuilder()
     val lineRegex = regexForLine(lineSeparator)
     val headerRegex = regexForHeader(headerSeparator)
@@ -45,17 +44,17 @@ class FileWithCategoriesParser extends FileParser {
     def isHeader(target: String): Boolean =
       target contains headerSeparator.value
 
-    for (line <- readFile(source)) {
+    for (line <- FileUtil.stripFileContent(source)) {
       lazy val Array(f, s) = line split lineSeparator.value
 
       line match {
-        case headerRegex(f, _)  => builder.addHeader(f)
-        case lineRegex(f, _, s) => builder.addLine(WordLine(f, s))
-        // FIXME: stub... maybe it is needed to refactor
+        case headerRegex(f)  => builder.addHeader(f)
+        case lineRegex(f, s) => builder.addLine(WordLine(f, s))
+        case s if s.isBlank  => builder.addLine(NewLine)
         case _ => builder.addLine(WordLine(line, MatchErrorMessage))
       }
     }
 
-    builder.build
+    builder.build(headerSeparator, lineSeparator)
   }
 }

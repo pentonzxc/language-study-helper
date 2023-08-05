@@ -1,8 +1,10 @@
 import parser.file._
 import presentation.data._
-import view.TextView
+import view._
+import util.FileUtil._
 import java.io.File
 import scala.util.matching.Regex
+import java.io.PrintWriter
 
 object App {
   def main(args: Array[String]): Unit = {
@@ -13,9 +15,11 @@ object App {
         LineSeparator(" - ")
       )
 
-    val list = TextView.from(content)(
-      HeaderSeparator(":"),
-      LineSeparator(" - ")
-    )
+    val shuffled = Transformer.shuffle(content)
+    val view = TextView(content)
+
+    writeToFile(new File("somefile.txt")) { w =>
+      w.write(view.format(Format.LearningPart).asString)
+    }
   }
 }

@@ -6,5 +6,8 @@ abstract class Parser {
 
   def parse(
       from: Source
-  )(headerSeparator: HeaderSeparator, lineSeparator: LineSeparator): Content
+  )(
+      headerSeparator: HeaderSeparator,
+      lineSeparator: LineSeparator
+  ): Presentation
 }

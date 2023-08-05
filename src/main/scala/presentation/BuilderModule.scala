@@ -1,10 +1,8 @@
 package presentation
 
-private[presentation] trait BuilderModule {
+trait BuilderModule {
   self: PresentationModule =>
-  import scala.collection.mutable.ListBuffer
-
-//   val contentBuilder: ContentBuilder = ContentBuilder()
+  import collection.mutable.ListBuffer
 
   case class ContentBuilder() {
 
@@ -20,15 +18,19 @@ private[presentation] trait BuilderModule {
       content += currentCategory
     }
 
-    def build: Content = Content(
+    def build(
+        hSep: HeaderSeparator,
+        lSep: LineSeparator
+    ): Presentation = Presentation(
       (content.toList match {
         case xs :: xz if xs.lines.size == 0 => xz
         case s                              => s
-      }).map(c => Category(c.header, c.lines.toList))
+      }).map(c => Category(c.header, c.lines.toList)),
+      Separator.Pair(headerSep = hSep, lineSep = lSep)
     )
   }
 
-  private case class CategoryBuilder(
+  case class CategoryBuilder(
       val header: String,
       val lines: ListBuffer[WordLine] = ListBuffer.empty[WordLine]
   )
